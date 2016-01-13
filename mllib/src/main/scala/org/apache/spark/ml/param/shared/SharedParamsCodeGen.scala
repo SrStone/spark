@@ -44,6 +44,7 @@ private[shared] object SharedParamsCodeGen {
         " probabilities. Note: Not all models output well-calibrated probability estimates!" +
         " These probabilities should be treated as confidences, not precise probabilities",
         Some("\"probability\"")),
+      ParamDesc[String]("varianceCol", "Column name for the biased sample variance of prediction"),
       ParamDesc[Double]("threshold",
         "threshold in binary classification prediction, in range [0, 1]", Some("0.5"),
         isValid = "ParamValidators.inRange(0, 1)", finalMethods = false),
@@ -56,9 +57,9 @@ private[shared] object SharedParamsCodeGen {
       ParamDesc[String]("inputCol", "input column name"),
       ParamDesc[Array[String]]("inputCols", "input column names"),
       ParamDesc[String]("outputCol", "output column name", Some("uid + \"__output\"")),
-      ParamDesc[Int]("checkpointInterval", "checkpoint interval (>= 1). E.g. 10 means that " +
-        "the cache will get checkpointed every 10 iterations.",
-        isValid = "ParamValidators.gtEq(1)"),
+      ParamDesc[Int]("checkpointInterval", "set checkpoint interval (>= 1) or " +
+        "disable checkpoint (-1). E.g. 10 means that the cache will get checkpointed " +
+        "every 10 iterations", isValid = "(interval: Int) => interval == -1 || interval >= 1"),
       ParamDesc[Boolean]("fitIntercept", "whether to fit an intercept term", Some("true")),
       ParamDesc[String]("handleInvalid", "how to handle invalid entries. Options are skip (which " +
         "will filter out rows with bad values), or error (which will throw an errror). More " +
@@ -73,7 +74,9 @@ private[shared] object SharedParamsCodeGen {
       ParamDesc[Double]("tol", "the convergence tolerance for iterative algorithms"),
       ParamDesc[Double]("stepSize", "Step size to be used for each iteration of optimization."),
       ParamDesc[String]("weightCol", "weight column name. If this is not set or empty, we treat " +
-        "all instance weights as 1.0."))
+        "all instance weights as 1.0."),
+      ParamDesc[String]("solver", "the solver algorithm for optimization. If this is not set or " +
+        "empty, default value is 'auto'.", Some("\"auto\"")))
 
     val code = genSharedParams(params)
     val file = "src/main/scala/org/apache/spark/ml/param/shared/sharedParams.scala"

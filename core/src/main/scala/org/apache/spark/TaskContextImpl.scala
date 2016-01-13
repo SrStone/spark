@@ -20,9 +20,9 @@ package org.apache.spark
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 
 import org.apache.spark.executor.TaskMetrics
+import org.apache.spark.memory.TaskMemoryManager
 import org.apache.spark.metrics.MetricsSystem
 import org.apache.spark.metrics.source.Source
-import org.apache.spark.unsafe.memory.TaskMemoryManager
 import org.apache.spark.util.{TaskCompletionListener, TaskCompletionListenerException}
 
 private[spark] class TaskContextImpl(
@@ -37,9 +37,6 @@ private[spark] class TaskContextImpl(
     val taskMetrics: TaskMetrics = TaskMetrics.empty)
   extends TaskContext
   with Logging {
-
-  // For backwards-compatibility; this method is now deprecated as of 1.3.0.
-  override def attemptId(): Long = taskAttemptId
 
   // List of callback functions to execute when the task completes.
   @transient private val onCompleteCallbacks = new ArrayBuffer[TaskCompletionListener]
@@ -60,13 +57,6 @@ private[spark] class TaskContextImpl(
       override def onTaskCompletion(context: TaskContext): Unit = f(context)
     }
     this
-  }
-
-  @deprecated("use addTaskCompletionListener", "1.1.0")
-  override def addOnCompleteCallback(f: () => Unit) {
-    onCompleteCallbacks += new TaskCompletionListener {
-      override def onTaskCompletion(context: TaskContext): Unit = f()
-    }
   }
 
   /** Marks the task as completed and triggers the listeners. */

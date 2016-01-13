@@ -49,6 +49,9 @@ abstract class RDG extends LeafExpression with Nondeterministic {
   override def nullable: Boolean = false
 
   override def dataType: DataType = DoubleType
+
+  // NOTE: Even if the user doesn't provide a seed, Spark SQL adds a default seed.
+  override def sql: String = s"$prettyName($seed)"
 }
 
 /** Generate a random column with i.i.d. uniformly distributed values in [0, 1). */
@@ -69,7 +72,7 @@ case class Rand(seed: Long) extends RDG {
       s"$rngTerm = new $className(${seed}L + org.apache.spark.TaskContext.getPartitionId());")
     ev.isNull = "false"
     s"""
-      final ${ctx.javaType(dataType)} ${ev.primitive} = $rngTerm.nextDouble();
+      final ${ctx.javaType(dataType)} ${ev.value} = $rngTerm.nextDouble();
     """
   }
 }
@@ -92,7 +95,7 @@ case class Randn(seed: Long) extends RDG {
       s"$rngTerm = new $className(${seed}L + org.apache.spark.TaskContext.getPartitionId());")
     ev.isNull = "false"
     s"""
-      final ${ctx.javaType(dataType)} ${ev.primitive} = $rngTerm.nextGaussian();
+      final ${ctx.javaType(dataType)} ${ev.value} = $rngTerm.nextGaussian();
     """
   }
 }
